@@ -26,7 +26,7 @@ grid on;
 clear all;
 samptime=1/20;
 freq=20;
-time=[0:99]*samptime;
+time=[0:19]*samptime;
 x=cos(2*pi*freq*time);
 subplot(2,1,2);
 plot(time,x);
