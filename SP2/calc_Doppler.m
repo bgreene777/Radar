@@ -25,5 +25,31 @@ legend('show');
 xlabel('\bf \fontsize{11} Time (s)')
 ylabel('\bf \fontsize{11} I and Q')
 title(['\bf \fontsize{12} X_h at az = ', num2str(az_1, '%3.0f'), '^\circ, r = ', num2str(r_1, '%6.3f'), ' km'])
+
+% plot vertical lines for beginning and end of 1 cycle in I
+x1 = 0.003;
+x2 = 0.0105;
+y1=get(gca,'ylim');
+plot([x1 x1], y1, 'k')
+plot([x2 x2], y1, 'k')
+
+% plot vertical dashed lines for beginning and end of 1 cycle in H
+x3 = 0.01;
+x4 = 0.0165;
+y1=get(gca,'ylim');
+plot([x3 x3], y1, '--k')
+plot([x4 x4], y1, '--k')
+
 % save
-% print(f1, 'Q6_storm_h', '-dpng', '-r300')
+print(f1, 'Q7_IQ', '-dpng', '-r300')
+
+%% 1 cycle I
+T = x2 - x1;
+f_d = 1/T;
+% use f_d = -2 * v_r / lambda
+v_r = -f_d * lambda / 2;
+
+%% 1 cycle Q
+T2 = x4 - x3;
+f_d_2 = 1/T2;
+v_r_2 = -f_d_2 * lambda / 2;
