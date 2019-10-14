@@ -88,6 +88,8 @@ xlabel('\bf \fontsize{11} Zonal Distance (km)')
 ylabel('\bf \fontsize{11} Meridional Distance (km)')
 title(['\bf \fontsize{12} Horizontal Power ',datestr(dat1.scan_time),' El=',num2str(dat1.el,'%5.2f'),' degrees']);
 colorbar;
+% save
+print(f1, 'Q8_frame1', '-dpng', '-r300')
 
 % frame 2
 f2=figure(2); 
@@ -107,3 +109,5 @@ xlabel('\bf \fontsize{11} Zonal Distance (km)')
 ylabel('\bf \fontsize{11} Meridional Distance (km)')
 title(['\bf \fontsize{12} Horizontal Power ',datestr(dat2.scan_time),' El=',num2str(dat2.el,'%5.2f'),' degrees']);
 colorbar;
+% save
+print(f2, 'Q8_frame2', '-dpng', '-r300')
