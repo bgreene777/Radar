@@ -439,44 +439,154 @@ print(f45, 'Q5_pow_hist_clear', '-dpng', '-r300')
 
 %% FFT - storm
 Fs = 1./pri;
-S_1 = fftshift(R_1_norm);
+va = lambda * Fs / 4;
+L = 2^nextpow2(length(R_1_norm));
+S_1 = fft(R_1_norm, L);
+S_1_shift = abs(fftshift(S_1));
 n = length(S_1);
-f0 = (0:n-1) * (Fs/n);
-f = (-n/2:n/2-1) * (Fs/n);
+f0 = (0:n-1) * (2 * va/n);
+f = (-n/2:n/2-1) * (2 * va/n);
 f60 = figure(60);
-plot(f, S_1)
-xlabel('\bf \fontsize{11} Frequency (Hz)')
-ylabel('\bf \fontsize{11} Power Spectral Density')
+subplot(2, 1, 1)
+plot(f0, 10*log10(S_1))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
 title('\bf \fontsize{12} Power Spectral Density In Storm')
+subplot(2, 1, 2)
+plot(f, 10*log10(S_1_shift))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
+title('\bf \fontsize{12} Shifted Power Spectral Density In Storm')
+% subplot(3,1,3)
+% plot(10*log10(pow))
 % save
 print(f60, 'Q6_psd_fft_storm', '-dpng', '-r300')
 
 %% FFT - clutter
-S_2 = fftshift(R_2_norm);
+S_2 = fft(R_2_norm, L);
+S_2_shift = fftshift(S_2);
 f61 = figure(61);
-plot(f, S_2)
-xlabel('\bf \fontsize{11} Frequency (Hz)')
-ylabel('\bf \fontsize{11} Power Spectral Density')
+subplot(2,1,1)
+plot(f0, 10*log10(S_2))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
 title('\bf \fontsize{12} Power Spectral Density In Clutter')
+subplot(2,1,2)
+plot(f, 10*log10(S_2_shift))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
+title('\bf \fontsize{12} Shifted Power Spectral Density In Clutter')
 % save
 print(f61, 'Q6_psd_fft_clutter', '-dpng', '-r300')
 
 %% FFT - clear air
-S_3 = fftshift(R_3_norm);
+S_3 = fft(R_3_norm, L);
+S_3_shift = fftshift(S_3);
 f62 = figure(62);
-plot(f, S_3)
-xlabel('\bf \fontsize{11} Frequency (Hz)')
-ylabel('\bf \fontsize{11} Power Spectral Density')
+subplot(2,1,1)
+plot(f0, 10*log10(S_3))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
 title('\bf \fontsize{12} Power Spectral Density In Clear Air')
+subplot(2,1,2)
+plot(f, 10*log10(S_3_shift))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
+title('\bf \fontsize{12} Shifted Power Spectral Density In Clear Air')
 % save
 print(f62, 'Q6_psd_fft_storm_clear', '-dpng', '-r300')
 
 %% FFT - tornado
-S_4 = fftshift(R_4_norm);
+S_4 = fft(R_4_norm, L);
+S_4_shift = fftshift(S_4);
 f63 = figure(63);
-plot(f, S_4)
-xlabel('\bf \fontsize{11} Frequency (Hz)')
-ylabel('\bf \fontsize{11} Power Spectral Density')
+subplot(2,1,1)
+plot(f0, 10*log10(S_4))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
 title('\bf \fontsize{12} Power Spectral Density In Tornado')
+subplot(2,1,2)
+plot(f, 10*log10(S_4_shift))
+xlabel('\bf \fontsize{11} Doppler Velocity (m/s)')
+ylabel('\bf \fontsize{11} Power Spectral Density (dB)')
+title('\bf \fontsize{12} Shifted Power Spectral Density In Tornado')
 % save
 print(f63, 'Q6_psd_fft_tor', '-dpng', '-r300')
+
+%% All ACF; integrate PSD
+R_all = zeros(num_az, num_gates);
+Pow_all = zeros(num_az, num_gates);
+f_all = (-n/2:n/2-1)*Fs/n;
+for i = 1:num_az
+    for j = 1:num_gates
+        [Ri, ~] = xcorr(squeeze(X_h(i,j,1:num_pulses)));
+        R_all(i,j) = real(Ri(50)); % take middle element (0th index)
+        Si = abs(fftshift(fft(Ri, L)));
+        Pow_all(i,j) = trapz(f_all, Si);
+    end
+end
+R_all_dB = 10*log10(R_all);
+Pow_all_dB = 10*log10(Pow_all);
+disp('done')
+
+%% PPI - xcorr
+f70=figure(70);
+set(gcf,'render','painters');
+naz_max = 360;
+if length(az_set)<naz_max
+	pcolor(x,y,R_all_dB);
+else
+	pcolor([x;x(1,:)],[y;y(1,:)],[R_all_dB;R_all_dB(1,:)]);
+end
+hold on
+shading flat
+axis equal
+axis([-30 30 -30 30])
+colormap(jet);
+xlabel('\bf \fontsize{11} Zonal Distance (km)')
+ylabel('\bf \fontsize{11} Meridional Distance (km)')
+title(['\bf \fontsize{12} Horizontal Power ',datestr(scan_time),' El=',num2str(el,'%5.2f'),' degrees']);
+colorbar;
+% save
+print(f70, 'Q7_ACF_all', '-dpng', '-r300')
+
+%% PPI - PSD
+f71=figure(71);
+set(gcf,'render','painters');
+naz_max = 360;
+if length(az_set)<naz_max
+	pcolor(x,y,Pow_all_dB);
+else
+	pcolor([x;x(1,:)],[y;y(1,:)],[Pow_all_dB;Pow_all_dB(1,:)]);
+end
+hold on
+shading flat
+axis equal
+axis([-30 30 -30 30])
+colormap(jet);
+xlabel('\bf \fontsize{11} Zonal Distance (km)')
+ylabel('\bf \fontsize{11} Meridional Distance (km)')
+title(['\bf \fontsize{12} Horizontal Power ',datestr(scan_time),' El=',num2str(el,'%5.2f'),' degrees']);
+colorbar;
+% save
+print(f71, 'Q7_PSD_all', '-dpng', '-r300')
+
+%% PPI - Old
+f72=figure(72); 
+set(gcf,'render','painters');
+naz_max = 360;
+if length(az_set)<naz_max
+	pcolor(x,y,pow_h);
+else
+	pcolor([x;x(1,:)],[y;y(1,:)],[pow_h;pow_h(1,:)]);
+end
+shading flat
+axis equal
+axis([-30 30 -30 30])
+colormap(jet);
+xlabel('\bf \fontsize{11} Zonal Distance (km)')
+ylabel('\bf \fontsize{11} Meridional Distance (km)')
+title(['\bf \fontsize{12} Horizontal Power ',datestr(scan_time),' El=',num2str(el,'%5.2f'),' degrees']);
+colorbar;
+% save
+print(f72, 'Q7_power', '-dpng', '-r300')
