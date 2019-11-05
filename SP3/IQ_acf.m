@@ -519,10 +519,11 @@ Pow_all = zeros(num_az, num_gates);
 f_all = (-n/2:n/2-1)*Fs/n;
 for i = 1:num_az
     for j = 1:num_gates
-        [Ri, ~] = xcorr(squeeze(X_h(i,j,1:num_pulses)));
+        [Ri, ~] = xcorr(squeeze(X_h(i,j,1:num_pulses)), 'biased');
         R_all(i,j) = real(Ri(50)); % take middle element (0th index)
-        Si = abs(fftshift(fft(Ri, L)));
-        Pow_all(i,j) = trapz(f_all, Si);
+        zi = abs(fftshift(fft(X_h(i,j,1:num_pulses), L)));
+        stuff = abs(zi).^2 * (pri/num_pulses);
+        Pow_all(i,j) = sum(stuff);
     end
 end
 R_all_dB = 10*log10(R_all);
